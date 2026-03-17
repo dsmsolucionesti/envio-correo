@@ -16,12 +16,12 @@ app.use(express.json());
 
 // Transportador SMTP
 const transporter = nodemailer.createTransport({
-    host: 'mail.danielsalfate.cl',
+    host: 'mail.dsmsoluciones.cl',
     port: 465,
     secure: true,
     auth: {
-        user: 'contacto@danielsalfate.cl',
-        pass: 'Holiday_46'
+        user: 'contacto@dsmsoluciones.cl',
+        pass: 'DSMSoluciones.'
     }
 });
 
@@ -51,8 +51,8 @@ app.post('/send', async (req, res) => {
 
         // Correo a la empresa
         await transporter.sendMail({
-            from: '"Contacto de cliente" <contacto@danielsalfate.cl>', //quien lo envía
-            to: 'dsmsolucionesti@gmail.com', //a quien le llega
+            from: '"Contacto de cliente" <contacto@dsmsoluciones.cl>', //quien lo envía
+            to: 'contacto@dsmsoluciones.cl', //a quien le llega
             replyTo: email,
             subject: `Nuevo correo de cliente`,
             html: `
@@ -83,7 +83,7 @@ app.post('/send', async (req, res) => {
             .replace('src="img/logo.png"', 'src="cid:logo"');
 
         await transporter.sendMail({
-            from: '"AGCI Industrial SpA" <contacto@danielsalfate.cl>',
+            from: '"AGCI Industrial SpA" <contacto@dsmsoluciones.cl>',
             to: email,
             subject: 'Hemos recibido tu mensaje',
             html: htmlContent,
