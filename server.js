@@ -1,6 +1,8 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 
@@ -23,7 +25,19 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Ruta de prueba
+// Función para cargar template y reemplazar variables
+function loadTemplate(templateName, variables) {
+    const templatePath = path.join(__dirname, templateName);
+    let template = fs.readFileSync(templatePath, 'utf-8');
+
+    for (const [key, value] of Object.entries(variables)) {
+        const regex = new RegExp(`{{${key}}}`, 'g');
+        template = template.replace(regex, value || '');
+    }
+
+    return template;
+}
+
 app.get('/', (req, res) => {
     res.send('Servidor Node funcionando');
 });
@@ -31,39 +45,58 @@ app.get('/', (req, res) => {
 // Ruta para enviar correos
 app.post('/send', async (req, res) => {
 
-    const { nombre, email, tipoEmprendimiento = '', mensaje } = req.body;
+    const { nombre, rut, cargo, nombreEmpresa, telefono, email, asunto, mensaje } = req.body;
 
     try {
 
         // Correo a la empresa
         await transporter.sendMail({
-            from: '"Formulario Web" <contacto@danielsalfate.cl>',
-            to: 'contacto@danielsalfate.cl',
+            from: '"Contacto de cliente" <contacto@danielsalfate.cl>', //quien lo envía
+            to: 'dsmsolucionesti@gmail.com', //a quien le llega
             replyTo: email,
-            subject: `Nuevo mensaje de contacto de ${nombre}`,
+            subject: `Nuevo correo de cliente`,
             html: `
                 <b>Nombre:</b> ${nombre}<br/>
+                <b>RUT:</b> ${rut}<br/>
+                <b>Cargo:</b> ${cargo}<br/>
+                <b>Nombre de la empresa:</b> ${nombreEmpresa}<br/>
+                <b>Teléfono:</b> ${telefono}<br/>
                 <b>Email:</b> ${email}<br/>
-                <b>Tipo:</b> ${tipoEmprendimiento}<br/>
+                <b>Asunto:</b> ${asunto}<br/>
                 <b>Mensaje:</b> ${mensaje}
             `
         });
 
-        // Correo al usuario
+        // Correo al usuario usando template
+        const templateVars = {
+            nombre,
+            rut: rut || '',
+            cargo: cargo || '',
+            nombreEmpresa: nombreEmpresa || '',
+            telefono: telefono || '',
+            email,
+            asunto: asunto || '',
+            mensaje
+        };
+
+        const htmlContent = loadTemplate('correo_cliente.html', templateVars)
+            .replace('src="img/logo.png"', 'src="cid:logo"');
+
         await transporter.sendMail({
-            from: '"Asesorías NAB" <contacto@danielsalfate.cl>',
+            from: '"AGCI Industrial SpA" <contacto@danielsalfate.cl>',
             to: email,
             subject: 'Hemos recibido tu mensaje',
-            html: `
-                <p>Hola <b>${nombre}</b>,</p>
-                <p>Hemos recibido tu mensaje y pronto nos pondremos en contacto contigo.</p>
-                <p>Saludos<br><b>Asesorías NAB</b></p>
-            `
+            html: htmlContent,
+            attachments: [{
+                filename: 'logo.png',
+                path: path.join(__dirname, 'img', 'logo.png'),
+                cid: 'logo'
+            }]
         });
 
         res.json({
             ok: true,
-            message: 'Correos enviados correctamente'
+            message: 'Correo enviado correctamente'
         });
 
     } catch (err) {
@@ -72,7 +105,7 @@ app.post('/send', async (req, res) => {
 
         res.status(500).json({
             ok: false,
-            error: err.message
+            error: `Error al enviar correo ${err.message}`
         });
 
     }
