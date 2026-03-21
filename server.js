@@ -67,7 +67,7 @@ app.post('/send', async (req, res) => {
         // Correo a la empresa
         await transporter.sendMail({
             from: '"Contacto desde la web" <contacto@dsmsoluciones.cl>', //quien lo envía
-            to: 'contacto@dsmsoluciones.cl', //a quien le llega
+            to: 'dsmsolucionesti@gmail.com', //a quien le llega
             replyTo: email,
             subject: `Nuevo correo desde la web`,
             html: htmlContentInterno,
