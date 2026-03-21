@@ -49,25 +49,7 @@ app.post('/send', async (req, res) => {
 
     try {
 
-        // Correo a la empresa
-        await transporter.sendMail({
-            from: '"Contacto de cliente" <contacto@dsmsoluciones.cl>', //quien lo envía
-            to: 'contacto@dsmsoluciones.cl', //a quien le llega
-            replyTo: email,
-            subject: `Nuevo correo de cliente`,
-            html: `
-                <b>Nombre:</b> ${nombre}<br/>
-                <b>RUT:</b> ${rut}<br/>
-                <b>Cargo:</b> ${cargo}<br/>
-                <b>Nombre de la empresa:</b> ${nombreEmpresa}<br/>
-                <b>Teléfono:</b> ${telefono}<br/>
-                <b>Email:</b> ${email}<br/>
-                <b>Asunto:</b> ${asunto}<br/>
-                <b>Mensaje:</b> ${mensaje}
-            `
-        });
-
-        // Correo al usuario usando template
+        // Variables para el template
         const templateVars = {
             nombre,
             rut: rut || '',
@@ -78,6 +60,25 @@ app.post('/send', async (req, res) => {
             asunto: asunto || '',
             mensaje
         };
+
+        const htmlContentInterno = loadTemplate('correo_interno.html', templateVars)
+            .replace('src="img/logo.png"', 'src="cid:logo"');
+
+        // Correo a la empresa
+        await transporter.sendMail({
+            from: '"Contacto desde la web" <contacto@dsmsoluciones.cl>', //quien lo envía
+            to: 'contacto@dsmsoluciones.cl', //a quien le llega
+            replyTo: email,
+            subject: `Nuevo correo desde la web`,
+            html: htmlContentInterno,
+            attachments: [{
+                filename: 'logo.png',
+                path: path.join(__dirname, 'img', 'logo.png'),
+                cid: 'logo'
+            }]
+        });
+
+
 
         const htmlContent = loadTemplate('correo_cliente.html', templateVars)
             .replace('src="img/logo.png"', 'src="cid:logo"');
